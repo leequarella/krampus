@@ -114,7 +114,11 @@
   };
   this.kids = {
     clean: function() {
-      var id, kid, _results;
+      var com, id, kid, _results;
+      while (game.user_commands.length > 0) {
+        com = game.user_commands.pop();
+        console.log(com);
+      }
       _results = [];
       for (id in this.list) {
         kid = this.list[id];
@@ -181,9 +185,7 @@
     draw: function(kid) {
       var div;
       div = $("<button />").addClass("kid").attr("id", "kid" + kid.id);
-      div.css("margin-top", kid.y).css("margin-left", kid.x).click(function() {
-        return kids.hit(kid.id);
-      });
+      div.css("margin-top", kid.y).css("margin-left", kid.x);
       $("#play_area").append(div);
       return kid.drawn = true;
     }

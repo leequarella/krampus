@@ -96,6 +96,9 @@ $ ->
 
 @kids =
   clean: ->
+    while game.user_commands.length > 0
+      com = game.user_commands.pop()
+      console.log com
     for id of @list
       kid = @list[id]
       if game.running_time > (kid.started + kid.speed)
@@ -151,7 +154,7 @@ $ ->
   draw: (kid) ->
     div = $("<button />").addClass("kid").attr("id", "kid" + kid.id)
     div.css("margin-top", kid.y).css("margin-left", kid.x)
-      .click -> kids.hit(kid.id)
+    #.click -> kids.hit(kid.id)
     $("#play_area").append div
     kid.drawn = true
     

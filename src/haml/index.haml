@@ -1,0 +1,29 @@
+!!!5
+%html
+  %head
+    %title Krampus
+    %meta{:name => "viewport", :content => "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, target-densitydpi=device-dpi"}
+    %meta{:charset => "utf-8"}
+    
+    
+    %link{:rel=>"stylesheet", :href=>"stylesheets/style.css"}
+    
+    %script{:src=> "vendor/jquery-1.7.min.js"}
+    /%script{:src=> "vendor/jquery.mobile-1.0.min.js"}
+    
+    %script{:src=>"javascripts/core.js"}
+    /%script{:src=>"javascripts/phonegap-1.2.0.js"}
+    
+
+  %body
+    #nav
+      %button#game_start START
+      %button#game_stop STOP
+      
+    #game_info
+      #running_time 0
+      #output0 Ready
+      #score Score: 0
+      #misses Misses: 0
+    
+    #play_area

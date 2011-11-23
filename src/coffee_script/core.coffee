@@ -1,7 +1,12 @@
 $ ->
-  observers.init()
-  #document.addEventListener "deviceready", ->
-  #  observers.init()
+  #window.target = "browser"
+  window.target = "android"
+  
+  if target == "browser"
+    observers.init()
+  else
+    document.addEventListener "deviceready", ->
+      observers.init()
   
 
 @keysDown = {}  
@@ -12,10 +17,8 @@ $ ->
     $("button#game_stop").click -> game.stop()    
     addEventListener "keydown", (e) -> keysDown[e.keyCode] = true
     addEventListener "keyup", (e) -> delete keysDown[e.keyCode]
-    $("#play_area").click((e)-> game.user_commands.push e)
       
 @game =
-  sound: "browser"
   running: false
   running_time: 0
   user_commands: []
@@ -35,26 +38,31 @@ $ ->
     kids.speed = 2000
     @user_commands = []
     @running_time = 0
+    switch target
+      when 'android'
+        document.addEventListener "touchstart", (e)-> game.user_commands.push e.changedTouches[0]#, alert e.changedTouches[0].pageX
+      when 'browser'
+        $("body").bind("click", (e)-> game.user_commands.push e)
   
   start: ->
     @init()
     @running = true
     @main_loop_interval = setInterval(game.main, 1)
     @past = Date.now()
-    switch @sound 
+    switch target
       when 'android'
         @krampus_song = new Media('/android_asset/www/audio/krampus.mp3')  #new Audio("audio/krampus.mp3")
       when 'browser'
         @krampus_song = new Audio("audio/krampus.mp3")
     @krampus_song.play()
-    $("#output0").html "game started"
+    $("#output0").html "Game Started"
   
   stop: ->
     @krampus_song.pause()
     @running = false
     @main_loop_interval = window.clearInterval(@main_loop_interval)
     kids.clearAll()
-    $("#output0").html "game stopped"
+    $("#output0").html "Game Stopped"
     
   
   main: -> 
@@ -83,9 +91,15 @@ $ ->
       kids.draw(kid) if !kid.drawn
     @gameOver() if @misses > @game_over
       
+  drawClick: (com) ->
+    div = $("<div />").addClass("hit").attr("id", "com" + com.id)
+    div.css("top", com.y).css("left", com.x)
+    $("#play_area").append div
+    div.fadeOut(100)
+      
   gameOver: ->
     @stop()
-    switch @sound 
+    switch target
       when 'android'
         snd = new Media('/android_asset/www/audio/bye.wav').play()
       when 'browser'
@@ -96,13 +110,24 @@ $ ->
 
 @kids =
   clean: ->
+    coms = []
     while game.user_commands.length > 0
       com = game.user_commands.pop()
-      console.log com
+      com = 
+        x: com.pageX
+        y: com.pageY
+      coms.push com 
     for id of @list
       kid = @list[id]
+      @detectCollisions(kid, coms) if coms.length > 0
       if game.running_time > (kid.started + kid.speed)
         @miss(id)
+  
+  detectCollisions: (kid, coms) ->
+    for com in coms
+      game.drawClick(com)
+      if kid.x >= (com.x - 60) && kid.x <= (com.x) && kid.y >= (com.y - 170) && kid.y <= (com.y - 100)
+        @hit(kid.id)
   
   miss: (id) ->
     kid = @list[id]
@@ -117,7 +142,7 @@ $ ->
   
   hit: (id) ->
     kid = @list[id]
-    switch @sound 
+    switch target
       when 'android'
         snd = new Media('/android_asset/www/audio/gulp-1.wav').play()
       when 'browser'
@@ -149,12 +174,10 @@ $ ->
       speed: @speed
       hit: false
     @list[kid.id] = kid
-    $("#output0").html "Kid added: " + @running_time + ", kid y: " + kid.y + ", kid x: " + kid.x 
   
   draw: (kid) ->
-    div = $("<button />").addClass("kid").attr("id", "kid" + kid.id)
+    div = $("<div />").addClass("kid").attr("id", "kid" + kid.id)
     div.css("margin-top", kid.y).css("margin-left", kid.x)
-    #.click -> kids.hit(kid.id)
     $("#play_area").append div
     kid.drawn = true
     

@@ -1,6 +1,13 @@
 (function() {
   $(function() {
-    return observers.init();
+    window.target = "android";
+    if (target === "browser") {
+      return observers.init();
+    } else {
+      return document.addEventListener("deviceready", function() {
+        return observers.init();
+      });
+    }
   });
   this.keysDown = {};
   this.observers = {
@@ -14,16 +21,12 @@
       addEventListener("keydown", function(e) {
         return keysDown[e.keyCode] = true;
       });
-      addEventListener("keyup", function(e) {
+      return addEventListener("keyup", function(e) {
         return delete keysDown[e.keyCode];
-      });
-      return $("#play_area").click(function(e) {
-        return game.user_commands.push(e);
       });
     }
   };
   this.game = {
-    sound: "browser",
     running: false,
     running_time: 0,
     user_commands: [],
@@ -41,14 +44,24 @@
       kids.list = [];
       kids.speed = 2000;
       this.user_commands = [];
-      return this.running_time = 0;
+      this.running_time = 0;
+      switch (target) {
+        case 'android':
+          return document.addEventListener("touchstart", function(e) {
+            return game.user_commands.push(e.changedTouches[0]);
+          });
+        case 'browser':
+          return $("body").bind("click", function(e) {
+            return game.user_commands.push(e);
+          });
+      }
     },
     start: function() {
       this.init();
       this.running = true;
       this.main_loop_interval = setInterval(game.main, 1);
       this.past = Date.now();
-      switch (this.sound) {
+      switch (target) {
         case 'android':
           this.krampus_song = new Media('/android_asset/www/audio/krampus.mp3');
           break;
@@ -56,14 +69,14 @@
           this.krampus_song = new Audio("audio/krampus.mp3");
       }
       this.krampus_song.play();
-      return $("#output0").html("game started");
+      return $("#output0").html("Game Started");
     },
     stop: function() {
       this.krampus_song.pause();
       this.running = false;
       this.main_loop_interval = window.clearInterval(this.main_loop_interval);
       kids.clearAll();
-      return $("#output0").html("game stopped");
+      return $("#output0").html("Game Stopped");
     },
     main: function() {
       var delta, now;
@@ -99,10 +112,17 @@
         return this.gameOver();
       }
     },
+    drawClick: function(com) {
+      var div;
+      div = $("<div />").addClass("hit").attr("id", "com" + com.id);
+      div.css("top", com.y).css("left", com.x);
+      $("#play_area").append(div);
+      return div.fadeOut(100);
+    },
     gameOver: function() {
       var snd;
       this.stop();
-      switch (this.sound) {
+      switch (target) {
         case 'android':
           snd = new Media('/android_asset/www/audio/bye.wav').play();
           break;
@@ -114,15 +134,33 @@
   };
   this.kids = {
     clean: function() {
-      var com, id, kid, _results;
+      var com, coms, id, kid, _results;
+      coms = [];
       while (game.user_commands.length > 0) {
         com = game.user_commands.pop();
-        console.log(com);
+        com = {
+          x: com.pageX,
+          y: com.pageY
+        };
+        coms.push(com);
       }
       _results = [];
       for (id in this.list) {
         kid = this.list[id];
+        if (coms.length > 0) {
+          this.detectCollisions(kid, coms);
+        }
         _results.push(game.running_time > (kid.started + kid.speed) ? this.miss(id) : void 0);
+      }
+      return _results;
+    },
+    detectCollisions: function(kid, coms) {
+      var com, _i, _len, _results;
+      _results = [];
+      for (_i = 0, _len = coms.length; _i < _len; _i++) {
+        com = coms[_i];
+        game.drawClick(com);
+        _results.push(kid.x >= (com.x - 60) && kid.x <= com.x && kid.y >= (com.y - 170) && kid.y <= (com.y - 100) ? this.hit(kid.id) : void 0);
       }
       return _results;
     },
@@ -142,7 +180,7 @@
     hit: function(id) {
       var kid, snd;
       kid = this.list[id];
-      switch (this.sound) {
+      switch (target) {
         case 'android':
           snd = new Media('/android_asset/www/audio/gulp-1.wav').play();
           break;
@@ -179,12 +217,11 @@
         speed: this.speed,
         hit: false
       };
-      this.list[kid.id] = kid;
-      return $("#output0").html("Kid added: " + this.running_time + ", kid y: " + kid.y + ", kid x: " + kid.x);
+      return this.list[kid.id] = kid;
     },
     draw: function(kid) {
       var div;
-      div = $("<button />").addClass("kid").attr("id", "kid" + kid.id);
+      div = $("<div />").addClass("kid").attr("id", "kid" + kid.id);
       div.css("margin-top", kid.y).css("margin-left", kid.x);
       $("#play_area").append(div);
       return kid.drawn = true;

@@ -1,15 +1,34 @@
 body {
+  background: #ca2e2f;
+  background-image: url("../images/bg.jpg");
+  background-repeat: no-repeat;
+  color: white;
   cursor: pointer;
+  margin: 0;
   -webkit-user-select: none;
   -khtml-user-select: none;
   -moz-user-select: none;
   -o-user-select: none;
-  user-select: none; }
+  user-select: none;
+  width: 100%;
+  height: 800px; }
 
 .kid {
   top: 110px;
   left: 5px;
-  width: 50px;
-  height: 50px;
+  width: 60px;
+  height: 60px;
+  background: green;
+  position: absolute;
+  border-radius: 100px;
+  border: 1px solid black;
+  box-shadow: 1px 1px 1px black; }
+
+.hit {
   background: black;
-  position: absolute; }
+  border-radius: 5px;
+  left: 5px;
+  height: 5px;
+  position: absolute;
+  top: 110px;
+  width: 5px; }
